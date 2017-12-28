@@ -1,0 +1,70 @@
+首先是安装。
+
+安装过程并不复杂，英文看得懂的可以自己看原文 https://secure.phabricator.com/book/phabricator/article/installation_guide/，写得非常详细，不需要很好的英文水平也能看懂。
+
+支持linux、mac os，支持nginx、apache，但不支持windows（原文：To install the Phabricator server software, you will need an operating system on your normal computer which is not Windows. ）。
+
+以下以centos6.4，LNMP环境为例子。
+
+一般情况下，Phabricator需要的软件环境我们都在安装配置LNMP时已经装好了。可以下载他提供的脚本文件 http://www.phabricator.com/rsrc/install/install_rhel-derivs.sh （这个shell脚本其实就是帮你安装他所需的一些软件，比如PHP、MYSQL、GIT等）查看一下里面需要的软件你是否都已经安装，没有的话可以自行YUM安装。如果你是纯净的系统，就直接执行他提供的这个脚本文件一键安装吧，不过我没试过。:P
+
+文件看下来我就缺一个git，就yum安装了一个。
+git不多说了，很强大，不过这里的主要作用就是用git命令行帮你拉取Phabricator的程序。
+
+git clone git://github.com/facebook/libphutil.git
+git clone git://github.com/facebook/arcanist.git
+git clone git://github.com/facebook/phabricator.git
+程序拉取时间超慢，特别是最后一个，原因你懂的，可以到我的网盘里下载 http://pan.baidu.com/s/1ntsO01j。
+
+然后就是配置nginx，过程很简单，他已经提供了Phabricator站点配置文本，只要作一些修改适应自己本地环境就好了，一般是粗体部分，以下为配置原文：
+
+复制代码
+server {
+server_name phabricator.example.com;
+
+root /path/to/phabricator/webroot;
+try_files $uri $uri/ /index.php;
+
+location / {
+index index.php;
+
+if ( !-f $request_filename )
+{
+rewrite ^/(.*)$ /index.php?__path__=/$1 last;
+break;
+}
+}
+
+location /index.php {
+fastcgi_pass localhost:9000;
+fastcgi_index index.php;
+
+#required if PHP was built with --enable-force-cgi-redirect
+fastcgi_param REDIRECT_STATUS 200;
+
+#variables to make the $_SERVER populate in PHP
+fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+fastcgi_param QUERY_STRING $query_string;
+fastcgi_param REQUEST_METHOD $request_method;
+fastcgi_param CONTENT_TYPE $content_type;
+fastcgi_param CONTENT_LENGTH $content_length;
+
+fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+
+fastcgi_param GATEWAY_INTERFACE CGI/1.1;
+fastcgi_param SERVER_SOFTWARE nginx/$nginx_version;
+
+fastcgi_param REMOTE_ADDR $remote_addr;
+}
+}
+复制代码
+ 
+
+配置好nginx就能运行网站了。
+
+安装好，为了避免报错，最好将它提出的需要解决的issues都解决掉，解决方法他都给你提出来了，简直感动哭了。
+一般是要你配置程序、跑一些脚本、配置连接MYSQL和安装配置一些PHP的扩展类库（GD、APC等），每个人的环境各不相同，issues也不一样，具体情况具体分析吧。
+
+程序是安装好了，但怎么用起来还得研究一下。:)
+
+To be continued.
