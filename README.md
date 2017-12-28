@@ -16,6 +16,16 @@ http://ju.outofmemory.cn/entry/99852
 使用Phabricator做为Code Review工具
 https://www.jianshu.com/p/b1a75a14638c
 
+
+
+
+重点***
+Phabricator 安装及使用指南
+https://max.book118.com/html/2017/0701/119474851.shtm
+
+
+
+
 重点***
 Phabricator 安装及使用指南
 http://m.tceic.com/jk1hl072g5k9856g5612607l.html###
