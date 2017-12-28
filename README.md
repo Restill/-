@@ -1,40 +1,43 @@
+phabricator-zh_CNæ±‰åŒ–åŒ…
+https://github.com/wanthings/phabricator-zh_CN
 
-PhabricatorÓÃ»§ÎÄµµ
+
+Phabricatorç”¨æˆ·æ–‡æ¡£
 https://secure.phabricator.com/book/phabricator/
 
-ÖØµã**
-´úÂëÉó²éphabricatorÊ¹ÓÃÖ¸ÄÏ½éÉÜ
+é‡ç‚¹**
+ä»£ç å®¡æŸ¥phabricatorä½¿ç”¨æŒ‡å—ä»‹ç»
 https://www.jianshu.com/p/d9957c1d2339
 
 
-ÖØµã**
-Phabricator Êµ¼ùÖ®ÅäÖÃÕËºÅºÍ×¢²á
+é‡ç‚¹**
+Phabricator å®è·µä¹‹é…ç½®è´¦å·å’Œæ³¨å†Œ
 http://ju.outofmemory.cn/entry/99852
 
 
-ÖØµã***
-Ê¹ÓÃPhabricator×öÎªCode Review¹¤¾ß
+é‡ç‚¹***
+ä½¿ç”¨Phabricatoråšä¸ºCode Reviewå·¥å…·
 https://www.jianshu.com/p/b1a75a14638c
 
 
 
 
-ÖØµã***
-Phabricator °²×°¼°Ê¹ÓÃÖ¸ÄÏ
+é‡ç‚¹***
+Phabricator å®‰è£…åŠä½¿ç”¨æŒ‡å—
 https://max.book118.com/html/2017/0701/119474851.shtm
 
 
 
 
-ÖØµã***
-Phabricator °²×°¼°Ê¹ÓÃÖ¸ÄÏ
+é‡ç‚¹***
+Phabricator å®‰è£…åŠä½¿ç”¨æŒ‡å—
 http://m.tceic.com/jk1hl072g5k9856g5612607l.html###
 
-ÖØµã***
-git¡¢phabricator°²×°¡¢ÅäÖÃ¼°Ê¹ÓÃ
+é‡ç‚¹***
+gitã€phabricatorå®‰è£…ã€é…ç½®åŠä½¿ç”¨
 http://rick_stone.leanote.com/post/phabricator%E5%AE%89%E8%A3%85
 
 
-ÖØµã***
-Phabricator²¿ÊğÊÖ²á
+é‡ç‚¹***
+Phabricatoréƒ¨ç½²æ‰‹å†Œ
 https://www.cnblogs.com/chorulex/p/5381558.html
