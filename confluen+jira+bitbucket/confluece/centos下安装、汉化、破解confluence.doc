@@ -1,0 +1,123 @@
+① 为confluence建立数据库
+mysql   -uroot    -p
+create database confluence default character set utf8 collate utf8_bin;
+grant all on confluence.* to  confluence@'localhost' identified by 'confluence';
+flush privileges;
+quit
+
+②下载安装破解confluence
+https://www.atlassian.com/software/confluence/download 
+
+atlassian-confluence-6.3.1-x64.bin   
+下载地址：https://pan.baidu.com/s/1skD5DQt    获取密码：5vmk
+  
+atlassian-extras-decoder-v2-3.2.jar  
+下载地址：https://pan.baidu.com/s/1eRKDDOA    获取密码：mbjp
+ 
+atlassian-universal-plugin-manager-plugin-2.22.jar
+下载地址：https://pan.baidu.com/s/1o7Lfv6M    提取密码：1i3y
+
+将上面两个包下载到本机的confluence目录下,给二进制文件授执行权限，然后安装
+chmod  +x  atlassian-confluence-6.5.0-x64.bin
+sudo  ./atlassian-confluence-6.5.0-x64.bin
+执行bin文件后，会经历三个确认
+第一个，是否确认安装。[o]
+第二个，选择安装方式，默认、自定义、升级现有的。[1]
+第三个，确认安装。[i]
+注：此时，安装已完成，不应该出现任何错误
+
+confluence安装到了/opt/atlassian/confluence和/var/atlassian/application-data/confluence目录下，并且confluence默认监听的端口是8090.一路默认安装即可！
+
+注意：confluence的主要配置文件为/opt/atlassian/confluence/conf/server.xml，和jira类似。此server.xml相当于tomcat中的server.xml配置文件，如果要修改访问端口，可以这里修改。
+
+如果要修改confluence的数据目录，可以在安装的时候，在安装过程中进行更换（默认是/var/atlassian/application-data/confluence）
+
+查看confluence端口是否起来了
+[root@test-vm03 opt]# lsof -i:8090
+COMMAND   PID       USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+java    18100 confluence   36u  IPv6 188496      0t0  TCP *:8090 (LISTEN)
+ 
+重启confluence命令
+[root@test-vm03 opt]# /etc/init.d/confluence restart
+
+
+③ http访问
+观察第一步安装信息，可知，confluence打开8090端口（我这里是8091）
+访问http://172.19.60.232:8091 记录此页面中的server ID
+
+停止wiki服务
+/etc/init.d/confluence  stop
+
+④ 将atlassian-extras-2.4.jar拷贝到本机，准备进行破解注
+cp  /opt/atlassian/confluence/confluence/WEB-INF/lib/atlassian-extras-2.4.jar
+
+⑤注意：这里我是将centos下的confluence5.1-crack，下载到了windows系统下
+解压下载的压缩包后，里面有confluence5.1-crack.zip，将其解压得到的confluence5.1-crack文件夹。将从centos下载下来的atlassian-extras-2.4.jar覆盖confluence5.1-crack里的atlassian-extras-2.4.jar
+进入confluence5.1-crack/iNVISIBLE
+
+linux对应的是keygen.sh，直接在windows下双击此代码文件。
+此时，会弹出UI界面
+
+填写相关信息（name别太短），最重要的是serveid，填写第二部获取的ServerID
+name：confluence
+email：默认的就行
+serverID：B8QY-11H1-5FUK-ZFD2
+点击“path”，选择第四步从centos下载下来的放在confluence5.1-crack里的atlassian-extras-2.4.jar
+点击“.gen”，key文本框里会生成相应信息
+
+
+⑥ 此时confluence5.1-crack里会有atlassian-extras-2.4.jar和atlassian-extras-2.4.bak
+将atlassian-extras-2.4.jar拷贝到服务器的/opt/atlassian/confluence/confluence/WEB-INF/lib/
+覆盖此处的文件
+
+⑦ 启动wiki
+/etc/init.d/confluence start
+
+⑧ 将生成的key，拷贝带浏览页面的license key位置
+
+
+⑨ 点击“下一步”
+
+⑩ 在centos服务器上，将mysql驱动包放到confluence里
+mv mysql-connector-java-5.1.42-bin.jar /opt/atlassian/confluence/confluence/WEB-INF/lib/
+
+重启服务
+/etc/init.d/confluence restart
+
+在页面上选择数据库“mysql” ，填写相关数据库信息，“测试连接下”
+报错：Confluence无法启动并抛出“MySQL会话隔离级别”REPEATABLE-READ“不再受支持”错误
+
+解决：
+有几个选项来解决这个问题：
+?将全局事务隔离级别设置为READ-COMMITTED。您可以通过编辑MySQL的my.cnf文件（通常在Windows操作系统上命名为my.ini）来配置MySQL服务器的设置。在文件中找到[mysqld]部分并添加/修改以下参数：
+[mysqld] ... transaction-isolation=READ-COMMITTED ... 
+?（3.5.6以上）在Confluence中设置会话隔离级别。在Confluence主目录的顶层，找到该confluence.cfg.xml文件并找到该<properties>部分。添加以下参数：
+<properties> ... <property name="hibernate.connection.isolation">2</property> ... <properties>
+
+重新启动数据库：/etc/init.d/mysqld restart
+
+修改后连接数据库成功，进行下一步
+
+我这里选择的是示范站点
+
+我这里选择的是“连接到jira”
+
+
+
+至此，confluence就安装好了，但是破解的只有30天试用期！！！！！！！1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

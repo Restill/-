@@ -1,0 +1,1 @@
+Bitbucket是一家源代码托管网站，采用Mercurial和Git作为分布式版本控制系统。
