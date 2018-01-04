@@ -1,0 +1,37 @@
+参考文章 http://john.albin.net/git/convert-subversion-to-git
+1 使用git  svn  clone拷贝svn仓库
+cd ~/test_repo
+git  svn clone file:///home/***/Desktop/SVN/svn_repo/ -T trunk -b branches -t tags
+2 新建一个git分bare仓库
+cd ..
+mkdir test.git
+cd test.git
+git init --bare
+3 将git的默认分支和svn的默认分支trunk对应起来
+git symbolic-ref HEAD refs/heads/trunk
+4 将test_repo推送到test.git中
+cd ~/test_repo
+git remote add bare ~/test.git
+git config remote.bare.push 'refs/remotes/*:refs/heads/*'
+git push bare
+此时就完成了推送，可以删除test_repo了
+
+5 将git repo中的trunk重命名为master
+cd ~/test.git
+git branch -m trunk master
+6 将svn repo中的tags移动到git repo的相应位置
+使用git svn clone导出版本库的时候会将svn中的tags保存成git中的tags/**，而并不是默认的tag，所以要进行移动
+
+cd ~/test.git
+git for-each-ref --format='%(refname)' refs/heads/tags |
+cut -d / -f 4 |
+while read ref
+do
+  git tag "$ref" "refs/heads/tags/$ref";
+  git branch -D "tags/$ref";
+done
+7 完成迁移，得到test.git
+进入工作文件夹，执行
+
+git clone ~/test.git
+使用git进行版本管理吧
