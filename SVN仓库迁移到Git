@@ -1,4 +1,6 @@
 参考文章 http://john.albin.net/git/convert-subversion-to-git
+https://www.cnblogs.com/shawnpoo/p/SVN-cang-ku-qian-yi-daoGit-de-wan-mei-jie-jue-ban-.html
+
 1 使用git  svn  clone拷贝svn仓库
 cd ~/test_repo
 git  svn clone file:///home/***/Desktop/SVN/svn_repo/ -T trunk -b branches -t tags
