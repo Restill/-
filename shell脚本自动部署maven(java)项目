@@ -1,0 +1,366 @@
+转自:http://www.voidcn.com/article/p-zmlolevs-eb.html
+pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.lala</groupId>
+	<artifactId>profile</artifactId>
+	<version>0.0.1</version>
+	<packaging>jar</packaging>
+
+	<name>profile</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.3-1102-jdbc4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+
+		<profile>
+			<id>dev</id>
+			<properties>
+				<env>dev</env>
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+
+		<!-- 测服 -->
+		<profile>
+			<id>test</id>
+			<properties>
+				<env>test</env>
+			</properties>
+		</profile>
+
+		<!-- 生产 -->
+		<profile>
+			<id>production</id>
+			<properties>
+				<env>production</env>
+			</properties>
+		</profile>
+
+	</profiles>
+
+	<build>
+
+		<resources>
+			<resource>
+				<directory>${project.basedir}/src/main/resources/${env}</directory>
+				<includes>
+					<include>*.*</include>
+				</includes>
+				<filtering>true</filtering>
+			</resource>
+			<resource>
+				<directory>${project.basedir}/src/main/resources/</directory>
+				<includes>
+					<include>logback.xml</include>
+				</includes>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<warName>tiles</warName>
+					<archive>
+						<addMavenDescriptor>false</addMavenDescriptor>
+					</archive>
+					<webResources>
+						<resource>
+							<directory>src/main/resources/${env}/application.properties</directory>
+							<filtering>true</filtering>
+						</resource>
+					</webResources>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>/home/web02/deploy/profile/current/lib/</classpathPrefix>
+							<mainClass>com.lala.server.Start</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.9</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<excludeTransitive>false</excludeTransitive>
+							<stripVersion>false</stripVersion>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+
+
+
+
+deploy.sh
+#!/bin/sh
+
+echo "============*******************================="
+echo "============ java 自动部署脚本 ================="
+echo "============*******************================="
+
+read -p "请输入将要部署的ip(例如:10.4.18.4): " ip
+read -p "请输入部署的分支名称(例如:master): " branch
+read -p "请输入部署的环境(例如:product|test|dev): " env
+read -p "请输入程序操作(例如:start|stop|restart|info|status): " handle
+read -p "是否需要从远程仓库pull代码(例如:y|n): " pull
+
+ip=${ip:-10.4.18.4}
+branch=${branch:-master}
+env=${env:-dev}
+handle=${handle:-restart}
+pull=${pull:-n}
+
+echo $ip $branch $env $handle $pull
+
+user=root
+applicationName=clean-all
+myProject=/root/.jenkins/jobs/clean-all/workspace/clean-all-qa/
+rootDir=${user}/.jenkins/jobs/web01/deploy
+project=$rootDir/$applicationName
+appName=$applicationName-0.0.1.war
+war_file=$myProject/target/$appName
+
+if [ $pull == 'y' ];then
+    git checkout $branch
+    git pull origin $branch
+fi
+
+mvn clean package -P${env}
+
+scp -r target/lib $user@$ip:$project/
+scp $war_file deploy/apiService.sh $user@$ip:$project/
+ssh $user@$ip sh $project/apiService.sh $handle $project $appName
+
+
+apiService.sh
+#!/bin/sh
+
+#警告!!!：该脚本stop部分使用系统kill命令来强制终止指定的java程序进程。
+#在杀死进程前，未作任何条件检查。在某些情况下，如程序正在进行文件或数据库写操作，
+#可能会造成数据丢失或数据不完整。如果必须要考虑到这类情况，则需要改写此脚本，
+
+JAVA_HOME=/home/web02/jdk1.7.0_67
+
+#执行程序启动所使用的系统用户，考虑到安全，不推荐使用root帐号
+RUNNING_USER=web02
+
+#Java程序所在的目录（classes的上一级目录）
+APP_HOME=$2
+
+#需要启动的Java主程序（main方法类）
+APP_MAINCLASS=$3
+
+#java虚拟机启动参数
+JAVA_OPTS="-ms512m -mx512m -Xmn256m -Djava.awt.headless=true -XX:MaxPermSize=128m -Xdebug -Xrunjdwp:transport=dt_socket,address=17003,server=y,suspend=n"
+
+mkdir -p $APP_HOME/release
+mkdir -p $APP_HOME/current
+
+releaseFile=$APP_HOME/release/$APP_MAINCLASS-`date  "+%Y-%m-%d_%H:%M:%S"`
+
+#备份之前的代码
+cp -r $APP_HOME/$APP_MAINCLASS $releaseFile
+rm -rf $APP_HOME/current/$APP_MAINCLASS
+rm -rf $APP_HOME/current/lib
+ln -s $releaseFile $APP_HOME/current/$APP_MAINCLASS
+rm -rf $APP_HOME/$APP_MAINCLASS
+mv $APP_HOME/lib $APP_HOME/current/
+cd $APP_HOME/current
+
+psid=0
+
+checkpid() {
+   javaps=`$JAVA_HOME/bin/jps -l | grep $APP_MAINCLASS`
+   if [ -n "$javaps" ]; then
+      psid=`echo $javaps | awk '{print $1}'`
+   else
+      psid=0
+   fi
+}
+
+###################################
+#(函数)启动程序
+#说明：
+#1. 首先调用checkpid函数，刷新$psid全局变量
+#2. 如果程序已经启动（$psid不等于0），则提示程序已启动
+#3. 如果程序没有被启动，则执行启动命令行
+#4. 启动命令执行后，再次调用checkpid函数
+#5. 如果步骤4的结果能够确认程序的pid,则打印[OK]，否则打印[Failed]
+#注意：echo -n 表示打印字符后，不换行
+###################################
+
+start() {
+   checkpid
+   if [ $psid -ne 0 ]; then
+      echo "================================"
+      echo "warn: $APP_MAINCLASS already started! (pid=$psid)"
+      echo "================================"
+   else
+      echo -n "Starting $APP_MAINCLASS ..."
+	  nohup $JAVA_HOME/bin/java $JAVA_OPTS -jar $APP_HOME/current/$APP_MAINCLASS &
+      checkpid
+      if [ $psid -ne 0 ]; then
+         echo "(pid=$psid) [OK]"
+      else
+         echo "[Failed]"
+      fi
+   fi
+}
+
+###################################
+#说明：
+#1. 首先调用checkpid函数，刷新$psid全局变量
+#2. 如果程序已经启动（$psid不等于0），则开始执行停止，否则，提示程序未运行
+#3. 使用kill -9 pid命令进行强制杀死进程
+#4. 执行kill命令行紧接其后，马上查看上一句命令的返回值: $?
+#5. 如果步骤4的结果$?等于0,则打印[OK]，否则打印[Failed]
+#6. 为了防止java程序被启动多次，这里增加反复检查进程，反复杀死的处理（递归调用stop）。
+#注意: 在shell编程中，"$?" 表示上一句命令或者一个函数的返回值
+###################################
+stop() {
+   checkpid
+   if [ $psid -ne 0 ]; then
+      echo -n "Stopping $APP_MAINCLASS ...(pid=$psid) "
+      kill -9 $psid
+      if [ $? -eq 0 ]; then
+         echo "[OK]"
+      else
+         echo "[Failed]"
+      fi
+
+      checkpid
+      if [ $psid -ne 0 ]; then
+         stop
+      fi
+   else
+      echo "================================"
+      echo "warn: $APP_MAINCLASS is not running"
+      echo "================================"
+   fi
+}
+
+###################################
+#说明：
+#1. 首先调用checkpid函数，刷新$psid全局变量
+#2. 如果程序已经启动（$psid不等于0），则提示正在运行并表示出pid
+#3. 否则，提示程序未运行
+###################################
+status() {
+   checkpid
+   if [ $psid -ne 0 ];  then
+      echo "$APP_MAINCLASS is running! (pid=$psid)"
+   else
+      echo "$APP_MAINCLASS is not running"
+   fi
+}
+
+###################################
+#(函数)打印系统环境参数
+###################################
+info() {
+   echo "System Information:"
+   echo "****************************"
+   echo `head -n 1 /etc/issue`
+   echo `uname -a`
+   echo
+   echo "JAVA_HOME=$JAVA_HOME"
+   echo `$JAVA_HOME/bin/java -version`
+   echo
+   echo "APP_HOME=$APP_HOME"
+   echo "APP_MAINCLASS=$APP_MAINCLASS"
+   echo "****************************"
+}
+
+###################################
+#读取脚本的第一个参数($1)，进行判断
+#参数取值范围：{start|stop|restart|status|info}
+#如参数不在指定范围之内，则打印帮助信息
+###################################
+case "$1" in
+   'start')
+      start
+      ;;
+   'stop')
+     stop
+     ;;
+   'restart')
+     stop
+     start
+     ;;
+   'status')
+     status
+     ;;
+   'info')
+     info
+     ;;
+  *)
+     echo "Usage: $0 {start|stop|restart|status|info}"
+     exit 1
+esac
+exit 0
+
+
+
+
+
